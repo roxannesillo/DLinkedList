@@ -2,9 +2,7 @@ package main;
 
 import dlinkedlist.DLinkedList;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -52,36 +50,66 @@ public class Main {
         System.out.println("-------------------");
 
         //SubList test
-        List<Number> subList = numbers.subList(0,3);
+        List<Number> subList = numbers.subList(0, 3);
         System.out.println(subList);
 
         System.out.println("-------------------");
 
         //listIterator test
         ListIterator<Number> listIterator = numbers.listIterator();
-        while (listIterator.hasNext()){
-            int index = listIterator.nextIndex();
-            System.out.println(listIterator.next() + " " + index);
+        while (listIterator.hasNext()) {
+            System.out.println(listIterator.nextIndex() + " " + listIterator.next() + " " + listIterator.nextIndex());
         }
         System.out.println("-------------------");
 
-        while (listIterator.hasPrevious()){
-            int nextIndex = listIterator.previousIndex();
-            System.out.println(listIterator.previous() + " " + nextIndex);
+        while (listIterator.hasPrevious()) {
+            System.out.println(listIterator.previousIndex() + " " + listIterator.previous() + " " + listIterator.previousIndex());
         }
 
-        System.out.println("-------------------");
+        System.out.println("-------------------**");
 
-        ListIterator<Number> listIteratorWithIndex = numbers.listIterator(2);
+
+
+        ListIterator<Number> listIteratorWithIndex = numbers.listIterator(1);
         while (listIteratorWithIndex.hasNext()){
-            System.out.println(listIteratorWithIndex.next());
+            System.out.println(listIteratorWithIndex.next() + " " + listIteratorWithIndex.nextIndex());
         }
 
-        System.out.println("-------------------");
+        System.out.println("-------------------**");
         while (listIteratorWithIndex.hasPrevious()){
             System.out.println(listIteratorWithIndex.previous());
         }
 
+        System.out.println("-----------------------");
 
+        // addAll test
+        List<Number> listToAdd = new ArrayList<>();
+        listToAdd.add(6);
+        listToAdd.add(12);
+        listToAdd.add(13);
+
+        numbers.addAll(listToAdd);
+        System.out.println(numbers);
+
+        // containsAll test
+
+        System.out.println("--------------------");
+
+        boolean containsAll = new HashSet<>(numbers).containsAll(listToAdd);
+        System.out.println(containsAll);
+
+        System.out.println("-------------------");
+
+        // retainAll test
+
+        boolean retainAll = numbers.retainAll(listToAdd);
+        System.out.println(numbers);
+
+        System.out.println("-------------------");
+
+        // removeAll test
+        boolean removeAll = numbers.removeAll(listToAdd);
+        System.out.println(numbers);
     }
 }
+

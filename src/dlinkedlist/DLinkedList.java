@@ -28,6 +28,9 @@ public class DLinkedList<E> implements List<E> {
 
     public DLinkedList(Collection<? extends E> c) {
         this();
+        if (c == null) {
+            throw new NullPointerException();
+        }
         for (E e : c) {
             insertBefore(tailCapNode, e);
         }
@@ -120,9 +123,8 @@ public class DLinkedList<E> implements List<E> {
             @Override
             public E next() {
                 if (hasNext()) {
-                    Node<E> tempNode = current;
                     current = current.next;
-                    return tempNode.element;
+                    return current.element;
                 }
                 throw new NoSuchElementException();
 
@@ -150,17 +152,16 @@ public class DLinkedList<E> implements List<E> {
 
 
     @Override
-    public <T> T[] toArray(T[] a) {
-        if (a.length < size || a.length > size) {
-            a = (T[]) Array.newInstance(a.getClass().getComponentType(), size);
+    public <T> T[] toArray(T[] array) {
+        if (array.length < size || array.length > size) {
+            array = (T[]) Array.newInstance(array.getClass().getComponentType(), size);
         }
         int i = 0;
-        Object[] result = a;
+        T[] result = array;
         for (Node<E> node = frontCapNode.next; node != tailCapNode; node = node.next) {
-            result[i++] = node.element;
+            result[i++] = (T) node.element;
         }
-        a = (T[]) result;
-        return a;
+        return array;
     }
 
     @Override
@@ -176,14 +177,14 @@ public class DLinkedList<E> implements List<E> {
     }
 
     @Override
-    public boolean containsAll(Collection<?> c) {
-        if (Objects.equals(c, null)) {
+    public boolean containsAll(Collection<?> collection) {
+        if (Objects.equals(collection, null)) {
             throw new NullPointerException();
         }
-        if (!(c instanceof DLinkedList<?>)) {
+        if (!(collection instanceof DLinkedList<?>)) {
             throw new ClassCastException();
         }
-        for (Object obj : c) {
+        for (Object obj : collection) {
             if (!contains(obj)) {
                 return false;
             }
@@ -192,26 +193,27 @@ public class DLinkedList<E> implements List<E> {
     }
 
     @Override
-    public boolean addAll(Collection<? extends E> c) {
-        if (Objects.equals(c, null)) {
+    public boolean addAll(Collection<? extends E> collection) {
+        if (Objects.equals(collection, null)) {
             throw new NullPointerException();
         }
-        for (E e : c) {
+
+        for (E e : collection) {
             insertBefore(tailCapNode, e);
         }
         return true;
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends E> c) {
+    public boolean addAll(int index, Collection<? extends E> collection) {
         if (index < size || index > size) {
             throw new IndexOutOfBoundsException();
         }
-        if (c == null) {
+        if (collection == null) {
             throw new NullPointerException();
         }
         Node<E> node = getNode(index);
-        for (E e : c) {
+        for (E e : collection) {
             assert node != null;
             insertBefore(node, e);
         }
@@ -219,17 +221,14 @@ public class DLinkedList<E> implements List<E> {
     }
 
     @Override
-    public boolean removeAll(Collection<?> c) {
-        if (c == null) {
+    public boolean removeAll(Collection<?> collection) {
+        if (collection == null) {
             throw new NullPointerException();
-        }
-        if (!(c instanceof DLinkedList<?>)) {
-            throw new ClassCastException();
         }
         boolean result = false;
         Node<E> node = frontCapNode.next;
         while (!node.equals(tailCapNode)) {
-            if (c.contains(node.element)) {
+            if (collection.contains(node.element)) {
                 result |= delete(node);
             }
             node = node.next;
@@ -238,14 +237,11 @@ public class DLinkedList<E> implements List<E> {
     }
 
     @Override
-    public boolean retainAll(Collection<?> c) {
-        if (!(c instanceof DLinkedList<?>)) {
-            throw new ClassCastException();
-        }
+    public boolean retainAll(Collection<?> collection) {
         boolean result = false;
         Node<E> node = frontCapNode.next;
         while (!node.equals(tailCapNode)) {
-            if (!c.contains(node.element)) {
+            if (!collection.contains(node.element)) {
                 result |= delete(node);
             }
             node = node.next;
@@ -275,9 +271,9 @@ public class DLinkedList<E> implements List<E> {
         }
         Node<E> node = getNode(index);
         assert node != null;
-        E oldElement = node.element;
+        E elementToSet = node.element;
         node.element = element;
-        return oldElement;
+        return elementToSet;
     }
 
     @Override
@@ -347,9 +343,23 @@ public class DLinkedList<E> implements List<E> {
 
     @Override
     public ListIterator<E> listIterator() {
+       return listIterator(0);
+    }
+
+
+    public ListIterator<E> listIterator(int index) {
         return new ListIterator<E>() {
 
-            private Node<E> current = frontCapNode;
+            private final Node<E> helperNode = getNode(index);
+            private Node<E> current;
+
+            {
+                assert helperNode != null;
+                current = helperNode.prev;
+            }
+
+            private int subsequentElementIndex = index;
+
 
             @Override
             public boolean hasNext() {
@@ -359,6 +369,7 @@ public class DLinkedList<E> implements List<E> {
             @Override
             public E next() {
                 if (hasNext()) {
+                    subsequentElementIndex++;
                     current = current.next;
                     return current.element;
                 }
@@ -375,6 +386,7 @@ public class DLinkedList<E> implements List<E> {
             @Override
             public E previous() {
                 if (hasPrevious()) {
+                    subsequentElementIndex--;
                     previousElement = previousElement.prev;
                     return previousElement.element;
                 }
@@ -383,12 +395,22 @@ public class DLinkedList<E> implements List<E> {
 
             @Override
             public int nextIndex() {
-                return indexOf(current.next.element);
+                if (subsequentElementIndex < size) {
+                    return subsequentElementIndex;
+                }
+                if (subsequentElementIndex == size) {
+                    subsequentElementIndex--;
+                    return size;
+                }
+                throw new NoSuchElementException();
             }
 
             @Override
             public int previousIndex() {
-                return indexOf(previousElement.prev.element);
+                if (subsequentElementIndex >= -1) {
+                    return subsequentElementIndex;
+                }
+                throw new NoSuchElementException();
             }
 
             @Override
@@ -414,96 +436,15 @@ public class DLinkedList<E> implements List<E> {
         };
     }
 
-
-    @Override
-    public ListIterator<E> listIterator(int index) {
-        if (index < 0 || index > size) {
-            throw new IndexOutOfBoundsException();
-        }
-        return new ListIterator<E>() {
-
-            final Node<E> helper = getNode(index);
-            Node<E> current;
-
-            {
-                assert helper != null;
-                current = helper.prev;
-            }
-
-            @Override
-            public boolean hasNext() {
-                return current.next != tailCapNode;
-            }
-
-            @Override
-            public E next() {
-                if (hasNext()) {
-                    current = current.next;
-                    return current.element;
-                }
-                throw new NoSuchElementException();
-            }
-
-            final Node<E> helperPrevius = getNode(index);
-            Node<E> previousElement;
-
-            {
-                assert helperPrevius != null;
-                previousElement = helperPrevius.prev;
-            }
-
-            @Override
-            public boolean hasPrevious() {
-                return previousElement.prev != frontCapNode;
-            }
-
-            @Override
-            public E previous() {
-                if (hasPrevious()) {
-                    previousElement = previousElement.prev;
-                    return previousElement.element;
-                }
-                throw new NoSuchElementException();
-            }
-
-            @Override
-            public int nextIndex() {
-                return indexOf(current.next.element);
-            }
-
-            @Override
-            public int previousIndex() {
-                return indexOf(previousElement.prev.element);
-
-            }
-
-            @Override
-            public void remove() {
-                if (current.prev == null) {
-                    throw new IllegalStateException();
-                }
-                delete(current);
-            }
-
-            @Override
-            public void set(E e) {
-                current.element = e;
-            }
-
-            @Override
-            public void add(E e) {
-                insertBefore(tailCapNode, e);
-
-            }
-        };
-
-    }
 
     @Override
     public List<E> subList(int fromIndex, int toIndex) {
+        if (fromIndex < 0 || fromIndex > size || toIndex < 0 || toIndex > size) {
+            throw new IndexOutOfBoundsException();
+        }
         Node<E> currentNode = getNode(fromIndex);
         List<E> subList = new DLinkedList<>();
-        for (int index = fromIndex; index <= toIndex; index++) {
+        for (int index = fromIndex; index < toIndex; index++) {
             assert currentNode != null;
             subList.add(currentNode.element);
             currentNode = currentNode.next;
