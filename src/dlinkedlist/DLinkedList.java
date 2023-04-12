@@ -380,7 +380,7 @@ public class DLinkedList<E> implements List<E> {
 
             @Override
             public boolean hasPrevious() {
-                return previousElement.prev != frontCapNode;
+                return previousElement.prev != current;
             }
 
             @Override
